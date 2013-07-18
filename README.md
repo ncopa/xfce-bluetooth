@@ -1,4 +1,4 @@
-xfce-polkit
+xfce-bluetooth
 ===========
 
-A simple PolicyKit authentication agent for XFCE
+A simple bluetooth agent for XFCE
