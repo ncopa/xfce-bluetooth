@@ -1,8 +1,13 @@
 AC_INIT([xfce-bluetooth], [0.1])
 AM_INIT_AUTOMAKE
 AC_PROG_CC
+AM_PROG_VALAC
 
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
+PKG_CHECK_MODULES([GIO], [gio-2.0])
+PKG_CHECK_MODULES([GMODULE], [gmodule-2.0])
+PKG_CHECK_MODULES([XFCE4_VALA], [xfce4-vala])
+PKG_CHECK_MODULES([LIBXFCE4UI], [libxfce4ui-1])
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
