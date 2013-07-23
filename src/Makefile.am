@@ -11,4 +11,4 @@ xfce_bluetooth_LDADD = @GLIB_LIBS@ \
 	@GMODULE_LIBS@ \
 	@LIBXFCE4UI_LIBS@
 
-AM_VALAFLAGS = --pkg gtk+-2.0 --pkg gmodule-2.0 --pkg gio-2.0
+AM_VALAFLAGS = --pkg gtk+-2.0 --pkg gmodule-2.0 --pkg gio-2.0 --pkg libxfce4ui-1
