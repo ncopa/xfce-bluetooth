@@ -27,6 +27,8 @@ public class XfceBluetoothApp {
     GLib.ObjectPath adapter_path = null;
     GLib.HashTable<string, GLib.Variant> adapter_props = null;
 
+    ListStore device_store;
+
     private void find_adapter() {
         objects.foreach((path, ifaces) => {
             GLib.HashTable<string, GLib.Variant>? props;
@@ -38,6 +40,18 @@ public class XfceBluetoothApp {
             adapter_path = path;
             adapter = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez",
                                           path);
+        });
+    }
+
+    private void find_devices() {
+        objects.foreach((path, ifaces) => {
+            GLib.HashTable<string, GLib.Variant>? props;
+            props = ifaces.get("org.bluez.Device1");
+            if (props != null) {
+                TreeIter iter;
+                device_store.append(out iter);
+                device_store.set(iter, 0, props.get("Alias").get_string());
+            }
         });
     }
 
@@ -84,6 +98,11 @@ public class XfceBluetoothApp {
             name_entry = builder.get_object("name_entry") as Entry;
             name_entry.set_text(adapter_props.get("Alias").get_string());
 
+            TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
+            device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
+            device_store = builder.get_object("device_store") as ListStore;
+
+            find_devices();
 
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
