@@ -7,6 +7,8 @@
     <columns>
       <!-- column-name device_alias -->
       <column type="gchararray"/>
+      <!-- column-name device_connected -->
+      <column type="gboolean"/>
     </columns>
   </object>
   <object class="XfceTitledDialog" id="window">

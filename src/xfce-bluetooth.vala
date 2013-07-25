@@ -50,7 +50,9 @@ public class XfceBluetoothApp {
             if (props != null) {
                 TreeIter iter;
                 device_store.append(out iter);
-                device_store.set(iter, 0, props.get("Alias").get_string());
+                device_store.set(iter,
+                                 0, props.get("Alias").get_string(),
+                                 1, props.get("Connected").get_boolean());
             }
         });
     }
@@ -100,6 +102,10 @@ public class XfceBluetoothApp {
 
             TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
+            var toggle = new CellRendererToggle();
+            toggle.sensitive = false;
+            device_treeview.insert_column_with_attributes (-1, "Connected", toggle, "active", 1);
+
             device_store = builder.get_object("device_store") as ListStore;
 
             find_devices();
