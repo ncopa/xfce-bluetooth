@@ -1,74 +1,140 @@
 using Gtk;
 
-[DBus (name = "org.bluez.Manager")]
-interface BluezManager : GLib.Object {
-    public abstract GLib.ObjectPath default_adapter() throws IOError;
+[DBus (name = "org.freedesktop.DBus.ObjectManager")]
+interface DBusObjectManager : GLib.Object {
+    [DBus (name = "GetManagedObjects")]
+    public abstract GLib.HashTable<GLib.ObjectPath, GLib.HashTable<string, GLib.HashTable<string, GLib.Variant>>> get_managed_objects() throws DBusError, IOError;
 }
 
-[DBus (name = "org.bluez.Adapter")]
-interface BluezAdapter : GLib.Object {
-    public abstract GLib.HashTable<string, GLib.Variant> get_properties() throws IOError;
-    public abstract void set_property(string name, GLib.Variant val) throws IOError;
+[DBus (name = "org.freedesktop.DBus.Properties")]
+interface DBusProperties : GLib.Object {
+    [DBus (name = "Set")]
+    public abstract void set(string iface, string name, GLib.Variant val) throws DBusError, IOError;
+    [DBus (name = "Get")]
+    public abstract GLib.Variant get(string iface, string name) throws DBusError, IOError;
 }
 
 public class XfceBluetoothApp {
     public Window window;
-    private CheckButton discoverable_checkbox;
+    private CheckButton discoverable_checkbutton;
+    private CheckButton powered_checkbutton;
+
     private Entry name_entry;
 
-	BluezManager manager;
-	BluezAdapter adapter;
-	GLib.ObjectPath adapter_path;
-    
-    public XfceBluetoothApp() {
-		try {
-			manager = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", "/");
-			adapter_path = manager.default_adapter();
-			stdout.printf("Default adapter = %s\n", adapter_path);
-			adapter = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", adapter_path);
-		} catch (IOError e) {
-			stderr.printf ("%s\n", e.message);
-		}
-		build_ui();
+    DBusObjectManager manager;
+    DBusProperties adapter;
+    GLib.HashTable<GLib.ObjectPath, GLib.HashTable<string, GLib.HashTable<string, GLib.Variant>>> objects;
+    GLib.ObjectPath adapter_path = null;
+    GLib.HashTable<string, GLib.Variant> adapter_props = null;
+
+    private void find_adapter() {
+        objects.foreach((path, ifaces) => {
+            GLib.HashTable<string, GLib.Variant>? props;
+            props = ifaces.get("org.bluez.Adapter1");
+            if (props == null)
+                return; /* continue */
+
+            adapter_props = props;
+            adapter_path = path;
+            adapter = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez",
+                                          path);
+        });
     }
 
-	private void build_ui() {
-		try {
-			Builder builder = new Builder();
-			builder.add_from_file("bluetooth.ui");
-			window = builder.get_object("window") as Window;
-			window.destroy.connect(Gtk.main_quit);
-			discoverable_checkbox = builder.get_object("discoverable_checkbox") as CheckButton;
-			name_entry = builder.get_object("name_entry") as Entry;
-			builder.connect_signals(this);
+    public XfceBluetoothApp() {
+        try {
+            manager = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", "/");
+            objects = manager.get_managed_objects();
+            find_adapter();
 
-			GLib.HashTable<string, GLib.Variant> properties;
-			properties = adapter.get_properties();
-			name_entry.set_text(properties.get("Name").get_string());
-			discoverable_checkbox.set_active(properties.get("Discoverable").get_boolean());
-		} catch (Error e) {
-			stderr.printf("%s\n", e.message);
-		}
+            stdout.printf("Find adapter: %s\n", adapter_path);
+            GLib.HashTable<string, GLib.HashTable<string, GLib.Variant>> obj;
+            objects.foreach((path ,interfaces)=> {
+                stdout.printf("[ %s ]\n", path);
+                interfaces.foreach((iface, props) => {
+                    if (iface.has_prefix("org.freedesktop.DBus"))
+                        return;
+                    stdout.printf("\t%s\n", iface);
+                    props.foreach((key, val) => {
+                        stdout.printf("\t\t%s: %s\n", key, val.print(false));
+                    });
+                });
+            });
+        } catch (IOError e) {
+            stderr.printf ("%s\n", e.message);
+        }
+        build_ui();
+    }
 
-	}
+    private void build_ui() {
+        Builder builder = new Builder();
+        try {
+            builder.add_from_file("bluetooth.ui");
+
+            window = builder.get_object("window") as Window;
+            window.destroy.connect(Gtk.main_quit);
+
+            powered_checkbutton = builder.get_object("powered_checkbutton") as CheckButton;
+            powered_checkbutton.set_active(adapter_props.get("Powered").get_boolean());
+
+            discoverable_checkbutton = builder.get_object("discoverable_checkbutton") as CheckButton;
+            discoverable_checkbutton.set_active(adapter_props.get("Discoverable").get_boolean());
+            discoverable_checkbutton.sensitive = powered_checkbutton.get_active();
+
+            name_entry = builder.get_object("name_entry") as Entry;
+            name_entry.set_text(adapter_props.get("Alias").get_string());
+
+
+        } catch (Error e) {
+            stderr.printf("%s\n", e.message);
+            return;
+        }
+        builder.connect_signals(this);
+    }
 
     [CCode (instance_pos = -1)]
     public void on_close(Button source) {
-		Gtk.main_quit();
+        Gtk.main_quit();
     }
-    
+
+    private void set_checkbutton_from_adapter_property(ToggleButton button, string property) {
+        try {
+            button.set_active(adapter.get("org.bluez.Adapter1", property).get_boolean());
+        } catch (Error e) {
+            stderr.printf("%s\n", e.message);
+        }
+    }
+
+    private void set_adapter_property_from_checkbutton(string property, ToggleButton button) {
+        bool val = button.get_active();
+        stdout.printf("Setting %s to %s\n", property, val ? "true" : "false");
+        try {
+            adapter.set("org.bluez.Adapter1", property, val);
+            return;
+        } catch (Error e) {
+            stderr.printf("%s\n", e.message);
+        }
+        /* reset checkbutton if failed */
+        set_checkbutton_from_adapter_property(button, property);
+    }
+
     [CCode (instance_pos = -1)]
-    public void on_discoverable(Button source) {
-		bool discoverable = discoverable_checkbox.get_active();
-		adapter.set_property("Discoverable", discoverable);
-		stdout.printf("Setting discoverable to %s\n", discoverable ? "true" : "false");
+    public void on_discoverable(ToggleButton button) {
+        set_adapter_property_from_checkbutton("Discoverable", button);
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_powered(ToggleButton button) {
+        set_adapter_property_from_checkbutton("Powered", button);
+        discoverable_checkbutton.sensitive = button.get_active();
+        set_checkbutton_from_adapter_property(discoverable_checkbutton, "Discoverable");
     }
 }
 
 int main (string[] args) {
-	Gtk.init(ref args);
-	var app = new XfceBluetoothApp();
-	app.window.show_all();
-	Gtk.main();
+    Gtk.init(ref args);
+    var app = new XfceBluetoothApp();
+    app.window.show_all();
+    Gtk.main();
     return 0;
 }
