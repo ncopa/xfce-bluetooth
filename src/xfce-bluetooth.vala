@@ -31,11 +31,11 @@ public class BluezInterface : GLib.Object {
         bus.properties_changed.connect(on_properties_changed);
     }
 
-    public GLib.Variant get_property(string property) {
+    public new GLib.Variant get(string property) {
         return properties.get(property);
     }
 
-    public void set_property(string property, GLib.Variant val) throws IOError {
+    public new void set(string property, GLib.Variant val) throws IOError {
         bus.set(iface_name, property, val);
     }
 
@@ -121,14 +121,14 @@ public class XfceBluetoothApp : GLib.Object {
             window.destroy.connect(Gtk.main_quit);
 
             powered_checkbutton = builder.get_object("powered_checkbutton") as CheckButton;
-            powered_checkbutton.set_active(adapter.get_property("Powered").get_boolean());
+            powered_checkbutton.set_active(adapter.get("Powered").get_boolean());
 
             discoverable_checkbutton = builder.get_object("discoverable_checkbutton") as CheckButton;
-            discoverable_checkbutton.set_active(adapter.get_property("Discoverable").get_boolean());
+            discoverable_checkbutton.set_active(adapter.get("Discoverable").get_boolean());
             discoverable_checkbutton.sensitive = powered_checkbutton.get_active();
 
             name_entry = builder.get_object("name_entry") as Entry;
-            name_entry.set_text(adapter.get_property("Alias").get_string());
+            name_entry.set_text(adapter.get("Alias").get_string());
 
             TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
@@ -166,7 +166,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     private void set_checkbutton_from_adapter_property(ToggleButton button, string property) {
         try {
-            button.set_active(adapter.get_property(property).get_boolean());
+            button.set_active(adapter.get(property).get_boolean());
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
         }
@@ -174,7 +174,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     private void set_adapter_property_from_checkbutton(string property, ToggleButton button) {
         try {
-            adapter.set_property(property, button.get_active());
+            adapter.set(property, button.get_active());
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
             /* reset checkbutton if failed */
