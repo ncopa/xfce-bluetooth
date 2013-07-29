@@ -15,52 +15,42 @@ interface DBusProperties : GLib.Object {
     public signal void properties_changed(string iface, GLib.HashTable <string, GLib.Variant> changed, string[] invalidated);
 }
 
-public class BluezAdapter {
+public class BluezInterface : GLib.Object {
     DBusProperties bus;
-    public GLib.ObjectPath object_path = null;
-    public GLib.HashTable<string, GLib.Variant> props = null;
-    private XfceBluetoothApp app = null;
+    string iface_name;
+    GLib.HashTable<string, GLib.Variant> properties;
 
-    public BluezAdapter(GLib.ObjectPath path,
-                        ref GLib.HashTable<string, GLib.Variant> initprops,
-                        XfceBluetoothApp initapp) {
+    public GLib.ObjectPath object_path = null;
+
+    public BluezInterface(string name, GLib.ObjectPath path,
+                        GLib.HashTable<string, GLib.Variant> props) {
+        properties = props;
+        iface_name = name;
         object_path = path;
-        props = initprops;
-        app = initapp;
-        bus = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez",
-                                          path);
+        bus = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", path);
         bus.properties_changed.connect(on_properties_changed);
     }
 
-    public GLib.Variant get_property(string property) throws IOError {
-        return bus.get("org.bluez.Adapter1", property);
+    public GLib.Variant get_property(string property) {
+        return properties.get(property);
     }
 
     public void set_property(string property, GLib.Variant val) throws IOError {
-        bus.set("org.bluez.Adapter1", property, val);
+        bus.set(iface_name, property, val);
     }
 
-    public void property_changed(string prop, GLib.Variant val) {
-        stdout.printf("\t%s: %s\n", prop, val.print(false));
-        switch (prop) {
-            case "Discoverable":
-                app.discoverable_checkbutton.set_active(val.get_boolean());
-                break;
-            case "Powered":
-                app.powered_checkbutton.set_active(val.get_boolean());
-                break;
-        }
-    }
+    public signal void property_changed(string prop, GLib.Variant val);
 
     public void on_properties_changed(string iface, GLib.HashTable <string, GLib.Variant> changed, string[] invalidated) {
-        stdout.printf("properties changed: [ %s ]\n", iface);
         changed.foreach((key, val) => {
+            properties.replace(key, val);
+            stdout.printf("%s: %s: %s\n", iface, key, val.print(false));
             property_changed(key, val);
         });
     }
 }
 
-public class XfceBluetoothApp {
+public class XfceBluetoothApp : GLib.Object {
     public Window window;
     public CheckButton discoverable_checkbutton;
     public CheckButton powered_checkbutton;
@@ -68,7 +58,7 @@ public class XfceBluetoothApp {
     private Entry name_entry;
 
     DBusObjectManager manager;
-    BluezAdapter adapter;
+    BluezInterface adapter;
     GLib.HashTable<GLib.ObjectPath, GLib.HashTable<string, GLib.HashTable<string, GLib.Variant>>> objects;
 
     ListStore device_store;
@@ -79,7 +69,8 @@ public class XfceBluetoothApp {
             props = ifaces.get("org.bluez.Adapter1");
             if (props == null)
                 return; /* continue */
-            adapter = new BluezAdapter(path, ref props, this);
+            adapter = new BluezInterface("org.bluez.Adapter1", path,
+                                         props);
         });
     }
 
@@ -130,14 +121,14 @@ public class XfceBluetoothApp {
             window.destroy.connect(Gtk.main_quit);
 
             powered_checkbutton = builder.get_object("powered_checkbutton") as CheckButton;
-            powered_checkbutton.set_active(adapter.props.get("Powered").get_boolean());
+            powered_checkbutton.set_active(adapter.get_property("Powered").get_boolean());
 
             discoverable_checkbutton = builder.get_object("discoverable_checkbutton") as CheckButton;
-            discoverable_checkbutton.set_active(adapter.props.get("Discoverable").get_boolean());
+            discoverable_checkbutton.set_active(adapter.get_property("Discoverable").get_boolean());
             discoverable_checkbutton.sensitive = powered_checkbutton.get_active();
 
             name_entry = builder.get_object("name_entry") as Entry;
-            name_entry.set_text(adapter.props.get("Alias").get_string());
+            name_entry.set_text(adapter.get_property("Alias").get_string());
 
             TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
@@ -154,6 +145,18 @@ public class XfceBluetoothApp {
             return;
         }
         builder.connect_signals(this);
+        adapter.property_changed.connect((prop, val) => {
+            stdout.printf("adapter property changed: %s: %s=%s\n",
+                          adapter.object_path, prop, val.print(false));
+            switch (prop) {
+                case "Discoverable":
+                    discoverable_checkbutton.set_active(val.get_boolean());
+                    break;
+                case "Powered":
+                    powered_checkbutton.set_active(val.get_boolean());
+                   break;
+            }
+        });
     }
 
     [CCode (instance_pos = -1)]
