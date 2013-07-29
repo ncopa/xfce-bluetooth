@@ -18,6 +18,14 @@ interface DBusProperties : GLib.Object {
                                           string[] invalidated);
 }
 
+[DBus (name = "org.bluez.AgentManager1")]
+interface BluezAgentManager : GLib.Object {
+    [DBus (name = "RegisterAgent")]
+    public abstract void register_agent(ObjectPath agent, string capability) throws DBusError, IOError;
+    [DBus (name = "RequestDefaultAgent")]
+    public abstract void request_default_agent(ObjectPath agent) throws DBusError, IOError;
+}
+
 public class BluezInterface : GLib.Object {
     DBusProperties bus;
     string iface_name;
