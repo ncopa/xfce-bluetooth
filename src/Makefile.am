@@ -1,7 +1,7 @@
 
 
 libexec_PROGRAMS = xfce-bluetooth
-xfce_bluetooth_SOURCES = xfce-bluetooth.vala
+xfce_bluetooth_SOURCES = xfce-bluetooth.vala BluezInterface.vala
 xfce_bluetooth_CFLAGS = @GLIB_CFLAGS@ \
 	@GIO_CFLAGS@ \
 	@GMODULE_CFLAGS@ \
