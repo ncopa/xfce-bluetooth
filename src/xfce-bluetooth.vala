@@ -125,7 +125,7 @@ public class XfceBluetoothApp : GLib.Object {
 
             discoverable_checkbutton = builder.get_object("discoverable_checkbutton") as CheckButton;
             discoverable_checkbutton.set_active(adapter.get("Discoverable").get_boolean());
-            discoverable_checkbutton.sensitive = powered_checkbutton.get_active();
+            discoverable_checkbutton.sensitive = powered_checkbutton.get_active() && !adapter.get("Discoverable").get_boolean();
 
             name_entry = builder.get_object("name_entry") as Entry;
             name_entry.set_text(adapter.get("Alias").get_string());
@@ -151,6 +151,7 @@ public class XfceBluetoothApp : GLib.Object {
             switch (prop) {
                 case "Discoverable":
                     discoverable_checkbutton.set_active(val.get_boolean());
+                    discoverable_checkbutton.sensitive= !val.get_boolean();
                     break;
                 case "Powered":
                     powered_checkbutton.set_active(val.get_boolean());
