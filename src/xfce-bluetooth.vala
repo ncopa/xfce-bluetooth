@@ -149,6 +149,16 @@ public class XfceBluetoothApp : GLib.Object {
         set_checkbutton_from_adapter_property(discoverable_checkbutton,
                                               "Discoverable");
     }
+
+    [CCode (instance_pos = -1)]
+    public void on_remove(Button button) {
+        stdout.printf("Button remove\n");
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_device_cursor_changed(TreeView view, TreePath path, TreeViewColumn column){
+        stdout.printf("device cursor changed\n");
+    }
 }
 
 int main (string[] args) {
