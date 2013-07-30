@@ -13,6 +13,10 @@ interface DBusProperties : GLib.Object {
     [DBus (name = "Get")]
     public abstract Variant get(string iface, string name)
                                throws DBusError, IOError;
+    [DBus (name = "GetAll")]
+    public abstract HashTable<string, Variant> get_all(string iface)
+                                                throws DBusError, IOError;
+
     public signal void properties_changed(string iface,
                                           HashTable <string, Variant> changed,
                                           string[] invalidated);
@@ -34,11 +38,14 @@ public class BluezInterface : GLib.Object {
     public ObjectPath object_path = null;
 
     public BluezInterface(string name, ObjectPath path,
-                          HashTable<string, Variant> props) {
-        properties = props;
+                          HashTable<string, Variant>? props = null) {
         iface_name = name;
         object_path = path;
         bus = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", path);
+        if (props == null) {
+            properties = bus.get_all(iface_name);
+        } else
+            properties = props;
         bus.properties_changed.connect(on_properties_changed);
     }
 
