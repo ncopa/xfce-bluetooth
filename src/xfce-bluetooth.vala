@@ -96,18 +96,16 @@ public class XfceBluetoothApp : GLib.Object {
             return;
         }
         builder.connect_signals(this);
-        adapter.property_changed.connect((prop, val) => {
-            stdout.printf("adapter property changed: %s: %s=%s\n",
-                          adapter.object_path, prop, val.print(false));
-            switch (prop) {
-                case "Discoverable":
-                    discoverable_checkbutton.set_active(val.get_boolean());
-                    discoverable_checkbutton.sensitive= !val.get_boolean();
-                    break;
-                case "Powered":
-                    powered_checkbutton.set_active(val.get_boolean());
-                   break;
-            }
+        adapter.notify["discoverable"].connect((s, p) => {
+            stdout.printf("adapter.notify[discoverable]\n");
+            discoverable_checkbutton.set_active(adapter.discoverable);
+            discoverable_checkbutton.sensitive = !adapter.discoverable;
+        });
+        adapter.notify["powered"].connect((s, p) => {
+            stdout.printf("adapter.notify[powered]\n");
+            powered_checkbutton.set_active(adapter.powered);
+            discoverable_checkbutton.sensitive = adapter.powered
+                && !adapter.discoverable;
         });
     }
 
@@ -116,37 +114,14 @@ public class XfceBluetoothApp : GLib.Object {
         Gtk.main_quit();
     }
 
-    private void set_checkbutton_from_adapter_property(ToggleButton button,
-                                                       string property) {
-        try {
-            button.set_active(adapter.get(property).get_boolean());
-        } catch (Error e) {
-            stderr.printf("%s\n", e.message);
-        }
-    }
-
-    private void set_adapter_property_from_checkbutton(string property,
-                                                       ToggleButton button) {
-        try {
-            adapter.set(property, button.get_active());
-        } catch (Error e) {
-            stderr.printf("%s\n", e.message);
-            /* reset checkbutton if failed */
-            set_checkbutton_from_adapter_property(button, property);
-        }
-    }
-
     [CCode (instance_pos = -1)]
     public void on_discoverable(ToggleButton button) {
-        set_adapter_property_from_checkbutton("Discoverable", button);
+        adapter.discoverable = button.get_active();
     }
 
     [CCode (instance_pos = -1)]
     public void on_powered(ToggleButton button) {
-        set_adapter_property_from_checkbutton("Powered", button);
-        discoverable_checkbutton.sensitive = button.get_active();
-        set_checkbutton_from_adapter_property(discoverable_checkbutton,
-                                              "Discoverable");
+        adapter.powered = button.get_active();
     }
 
     [CCode (instance_pos = -1)]

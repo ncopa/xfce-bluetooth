@@ -30,10 +30,10 @@ interface BluezAgentManager : GLib.Object {
     public abstract void request_default_agent(ObjectPath agent) throws DBusError, IOError;
 }
 
-public class BluezInterface : GLib.Object {
+public abstract class BluezInterface : GLib.Object {
     DBusProperties bus;
     string iface_name;
-    HashTable<string, Variant> properties;
+    HashTable<string, Variant> property_cache;
 
     public ObjectPath object_path = null;
 
@@ -43,29 +43,42 @@ public class BluezInterface : GLib.Object {
         object_path = path;
         bus = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", path);
         if (props == null) {
-            properties = bus.get_all(iface_name);
+            property_cache = bus.get_all(iface_name);
         } else
-            properties = props;
+            property_cache = props;
         bus.properties_changed.connect(on_properties_changed);
     }
 
-    public new Variant get(string property) {
-        return properties.get(property);
+    public Variant get_cache(string key) {
+        return property_cache.get(key);
     }
 
-    public new void set(string property, Variant val) throws IOError {
-        bus.set(iface_name, property, val);
+    public void set_cache(string key, Variant val) {
+        property_cache.replace(key, val);
     }
 
-    public signal void property_changed(string prop, Variant val);
+    public void set_bus(string key, Variant val) throws IOError {
+        if (val.equal(property_cache.get(key)))
+            return;
+        try {
+            bus.set(iface_name, key, val);
+            set_cache(key, val);
+        } catch (IOError e) {
+            stderr.printf("Failed to set %s=%s: %s", key, val.print(false), e.message);
+        }
+    }
+
+    public abstract void on_property_changed(string key, Variant val);
 
     public void on_properties_changed(string iface,
                                       HashTable <string, Variant> changed,
                                       string[] invalidated) {
         changed.foreach((key, val) => {
-            properties.replace(key, val);
-            stdout.printf("%s: %s: %s\n", iface, key, val.print(false));
-            property_changed(key, val);
+            if (val.equal(property_cache.get(key)))
+                return; /* continue foreach */
+            set_cache(key, val);
+            stdout.printf("BluezInterface: %s: %s=%s\n", iface, key, val.print(false));
+            on_property_changed(key, val);
         });
     }
 }
@@ -75,54 +88,55 @@ public class BluezAdapter : BluezInterface {
     private string[] _uuids;
 
     public string address {
-        get { return base.get("Address").get_string(); }
+        get { return this.get_cache("Address").get_string(); }
     }
 
     public string name {
-        get { return base.get("Name").get_string(); }
+        get { return this.get_cache("Name").get_string(); }
     }
 
     public string alias {
-        get { return base.get("Alias").get_string(); }
-        set { base.set("Alias", value); }
+        get { return this.get_cache("Alias").get_string(); }
+        set { this.set_bus("Alias", value); }
     }
 
     public uint32 class {
-        get { return base.get("Class").get_uint32(); }
+        get { return this.get_cache("Class").get_uint32(); }
     }
 
     public bool powered {
-        get { return base.get("Powered").get_boolean(); }
-        set { base.set("Powered", value); }
+        get { return this.get_cache("Powered").get_boolean(); }
+        set { this.set_bus("Powered", value); }
     }
 
     public bool discoverable {
-        get { return base.get("Discoverable").get_boolean(); }
-        set { base.set("Discoverable", value); }
+        get { return this.get_cache("Discoverable").get_boolean(); }
+        set { this.set_bus("Discoverable", value); }
     }
 
     public bool pairable {
-        get { return base.get("Pairable").get_boolean(); }
-        set { base.set("Pairable", value); }
+        get { return this.get_cache("Pairable").get_boolean(); }
+        set { this.set_bus("Pairable", value); }
     }
 
     public uint32 pairable_timeout {
-        get { return base.get("PairableTimeout").get_uint32(); }
-        set { base.set("PairableTimeout", value); }
+        get { return this.get_cache("PairableTimeout").get_uint32(); }
+        set { this.set_bus("PairableTimeout", value); }
     }
 
     public uint32 discoverable_timeout {
-        get { return base.get("DiscoverableTimeout").get_uint32(); }
-        set { base.set("DiscoverableTimeout", value); }
+        get { return this.get_cache("DiscoverableTimeout").get_uint32(); }
+        set { this.set_bus("DiscoverableTimeout", value); }
     }
 
     public bool discovering {
-        get { return base.get("Discovering").get_boolean(); }
+        get { return this.get_cache("Discovering").get_boolean(); }
+        private set { /* should alreay been set */ }
     }
 
     public weak string[] uuids {
         get {
-            _uuids = base.get("UUIDs").get_strv();
+            _uuids = this.get_cache("UUIDs").get_strv();
             return _uuids;
         }
     }
@@ -130,5 +144,31 @@ public class BluezAdapter : BluezInterface {
     public BluezAdapter(ObjectPath path,
                         HashTable<string, Variant>? props = null) {
         base("org.bluez.Adapter1", path, props);
+    }
+
+    public override void on_property_changed(string prop, Variant val) {
+        switch (prop) {
+        case "Alias":
+            this.alias = val.get_string();
+            break;
+        case "Powered":
+            this.powered = val.get_boolean();
+            break;
+        case "Discoverable":
+            this.discoverable = val.get_boolean();
+            break;
+        case "Pairable":
+            this.pairable = val.get_boolean();
+            break;
+        case "PairableTimeout":
+            this.pairable_timeout = val.get_uint32();
+            break;
+        case "DiscoverableTimeout":
+            this.discoverable_timeout = val.get_uint32();
+            break;
+        case "Discovering":
+            this.discovering = val.get_boolean();
+            break;
+        }
     }
 }
