@@ -69,3 +69,66 @@ public class BluezInterface : GLib.Object {
         });
     }
 }
+
+/* http://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc/adapter-api.txt */
+public class BluezAdapter : BluezInterface {
+    private string[] _uuids;
+
+    public string address {
+        get { return base.get("Address").get_string(); }
+    }
+
+    public string name {
+        get { return base.get("Name").get_string(); }
+    }
+
+    public string alias {
+        get { return base.get("Alias").get_string(); }
+        set { base.set("Alias", value); }
+    }
+
+    public uint32 class {
+        get { return base.get("Class").get_uint32(); }
+    }
+
+    public bool powered {
+        get { return base.get("Powered").get_boolean(); }
+        set { base.set("Powered", value); }
+    }
+
+    public bool discoverable {
+        get { return base.get("Discoverable").get_boolean(); }
+        set { base.set("Discoverable", value); }
+    }
+
+    public bool pairable {
+        get { return base.get("Pairable").get_boolean(); }
+        set { base.set("Pairable", value); }
+    }
+
+    public uint32 pairable_timeout {
+        get { return base.get("PairableTimeout").get_uint32(); }
+        set { base.set("PairableTimeout", value); }
+    }
+
+    public uint32 discoverable_timeout {
+        get { return base.get("DiscoverableTimeout").get_uint32(); }
+        set { base.set("DiscoverableTimeout", value); }
+    }
+
+    public bool discovering {
+        get { return base.get("Discovering").get_boolean(); }
+    }
+
+    public weak string[] uuids {
+        get {
+            _uuids = base.get("UUIDs").get_strv();
+            return _uuids;
+        }
+    }
+
+    public BluezAdapter(ObjectPath path,
+                        HashTable<string, Variant>? props = null) {
+        base("org.bluez.Adapter1", path, props);
+    }
+}

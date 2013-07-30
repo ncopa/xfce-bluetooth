@@ -8,7 +8,7 @@ public class XfceBluetoothApp : GLib.Object {
     private Entry name_entry;
 
     DBusObjectManager manager;
-    BluezInterface adapter;
+    BluezAdapter adapter;
     HashTable<ObjectPath, HashTable<string, HashTable<string, Variant>>> objects;
 
     ListStore device_store;
@@ -19,8 +19,7 @@ public class XfceBluetoothApp : GLib.Object {
             props = ifaces.get("org.bluez.Adapter1");
             if (props == null)
                 return; /* continue */
-            adapter = new BluezInterface("org.bluez.Adapter1", path,
-                                         props);
+            adapter = new BluezAdapter(path, props);
         });
     }
 
@@ -44,7 +43,7 @@ public class XfceBluetoothApp : GLib.Object {
             objects = manager.get_managed_objects();
             find_adapter();
 
-            stdout.printf("Find adapter: %s\n", adapter.object_path);
+            stdout.printf("Find adapter: %s (%s)\n", adapter.alias, adapter.address);
             objects.foreach((path ,interfaces)=> {
                 stdout.printf("[ %s ]\n", path);
                 interfaces.foreach((iface, props) => {
@@ -72,15 +71,15 @@ public class XfceBluetoothApp : GLib.Object {
             window.destroy.connect(Gtk.main_quit);
 
             powered_checkbutton = builder.get_object("powered_checkbutton") as CheckButton;
-            powered_checkbutton.set_active(adapter.get("Powered").get_boolean());
+            powered_checkbutton.set_active(adapter.powered);
 
             discoverable_checkbutton = builder.get_object("discoverable_checkbutton") as CheckButton;
-            discoverable_checkbutton.set_active(adapter.get("Discoverable").get_boolean());
-            discoverable_checkbutton.sensitive = powered_checkbutton.get_active()
-                && !adapter.get("Discoverable").get_boolean();
+            discoverable_checkbutton.set_active(adapter.discoverable);
+            discoverable_checkbutton.sensitive = adapter.powered
+                && !adapter.discoverable;
 
             name_entry = builder.get_object("name_entry") as Entry;
-            name_entry.set_text(adapter.get("Alias").get_string());
+            name_entry.set_text(adapter.alias);
 
             TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
