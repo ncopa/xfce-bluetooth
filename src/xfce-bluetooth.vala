@@ -4,6 +4,7 @@ public class XfceBluetoothApp : GLib.Object {
     public Window window;
     public CheckButton discoverable_checkbutton;
     public CheckButton powered_checkbutton;
+    public SpinButton discoverable_timeout_spinbutton;
 
     private Entry name_entry;
 
@@ -78,8 +79,11 @@ public class XfceBluetoothApp : GLib.Object {
             discoverable_checkbutton.sensitive = adapter.powered
                 && !adapter.discoverable;
 
-            name_entry = builder.get_object("name_entry") as Entry;
-            name_entry.set_text(adapter.alias);
+            discoverable_timeout_spinbutton = builder.get_object("discoverable_timeout_spinbutton") as SpinButton;
+            discoverable_timeout_spinbutton.set_value(adapter.discoverable_timeout);
+            discoverable_timeout_spinbutton.adjustment.value_changed.connect((a) => {
+                adapter.discoverable_timeout = (uint32) a.value;
+            });
 
             TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
@@ -96,16 +100,20 @@ public class XfceBluetoothApp : GLib.Object {
             return;
         }
         builder.connect_signals(this);
-        adapter.notify["discoverable"].connect((s, p) => {
-            stdout.printf("adapter.notify[discoverable]\n");
-            discoverable_checkbutton.set_active(adapter.discoverable);
-            discoverable_checkbutton.sensitive = !adapter.discoverable;
-        });
         adapter.notify["powered"].connect((s, p) => {
             stdout.printf("adapter.notify[powered]\n");
             powered_checkbutton.set_active(adapter.powered);
             discoverable_checkbutton.sensitive = adapter.powered
                 && !adapter.discoverable;
+        });
+        adapter.notify["discoverable"].connect((s, p) => {
+            stdout.printf("adapter.notify[discoverable]\n");
+            discoverable_checkbutton.set_active(adapter.discoverable);
+            discoverable_checkbutton.sensitive = !adapter.discoverable;
+        });
+        adapter.notify["discoverable_timeout"].connect((s, p) => {
+            stdout.printf("adapter.notify[discoverable_timeout]\n");
+            discoverable_timeout_spinbutton.adjustment.value = adapter.discoverable_timeout;
         });
     }
 
