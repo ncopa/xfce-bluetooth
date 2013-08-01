@@ -24,7 +24,24 @@ public class XfceBluetoothApp : GLib.Object {
         });
     }
 
+    private enum DevCols {
+        OBJPATH,
+        ALIAS,
+        CONNECTED,
+        PAIRED,
+        TRUSTED,
+        BLOCKED,
+        N_COLUMNS
+    }
+
     private void find_devices() {
+        device_store = new ListStore(DevCols.N_COLUMNS,
+                                     typeof(string),
+                                     typeof(string),
+                                     typeof(bool),
+                                     typeof(bool),
+                                     typeof(bool),
+                                     typeof(bool));
         objects.foreach((path, ifaces) => {
             HashTable<string, Variant>? props;
             props = ifaces.get("org.bluez.Device1");
@@ -32,8 +49,12 @@ public class XfceBluetoothApp : GLib.Object {
                 TreeIter iter;
                 device_store.append(out iter);
                 device_store.set(iter,
-                                 0, props.get("Alias").get_string(),
-                                 1, props.get("Connected").get_boolean());
+                                 DevCols.OBJPATH, path,
+                                 DevCols.ALIAS, props.get("Alias").get_string(),
+                                 DevCols.CONNECTED, props.get("Connected").get_boolean(),
+                                 DevCols.PAIRED, props.get("Paired").get_boolean(),
+                                 DevCols.TRUSTED, props.get("Trusted").get_boolean(),
+                                 DevCols.BLOCKED, props.get("Blocked").get_boolean());
             }
         });
     }
@@ -63,6 +84,12 @@ public class XfceBluetoothApp : GLib.Object {
         build_ui();
     }
 
+    private void treeview_add_toggle_col(TreeView v, string title, DevCols col) {
+            var toggle = new CellRendererToggle();
+            toggle.sensitive = false;
+            v.insert_column_with_attributes (-1, title, toggle, "active", col);
+    }
+
     private void build_ui() {
         Builder builder = new Builder();
         try {
@@ -85,15 +112,22 @@ public class XfceBluetoothApp : GLib.Object {
                 adapter.discoverable_timeout = (uint32) a.value;
             });
 
-            TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
-            device_treeview.insert_column_with_attributes (-1, "Device", new CellRendererText (), "text", 0);
-            var toggle = new CellRendererToggle();
-            toggle.sensitive = false;
-            device_treeview.insert_column_with_attributes (-1, "Connected", toggle, "active", 1);
-
-            device_store = builder.get_object("device_store") as ListStore;
-
             find_devices();
+
+            TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
+            device_treeview.set_model(device_store);
+
+            var text = new CellRendererText();
+            var col = new TreeViewColumn();
+            col.set_title("Device");
+            col.pack_start(text, true);
+            col.add_attribute(text, "text", DevCols.ALIAS);
+            device_treeview.append_column(col);
+
+            treeview_add_toggle_col(device_treeview, "Connected", DevCols.CONNECTED);
+            treeview_add_toggle_col(device_treeview, "Paired", DevCols.PAIRED);
+            treeview_add_toggle_col(device_treeview, "Trusted", DevCols.TRUSTED);
+            treeview_add_toggle_col(device_treeview, "Blocked", DevCols.BLOCKED);
 
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
