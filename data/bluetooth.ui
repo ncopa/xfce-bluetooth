@@ -145,7 +145,6 @@ discoverable/limited mode forever.</property>
               <object class="GtkTreeView" id="device_treeview">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <signal name="cursor-changed" handler="xfce_bluetooth_app_on_device_cursor_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -176,6 +175,7 @@ discoverable/limited mode forever.</property>
                   <object class="GtkButton" id="btn_remove">
                     <property name="label">gtk-remove</property>
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="use_stock">True</property>
@@ -191,6 +191,7 @@ discoverable/limited mode forever.</property>
                   <object class="GtkButton" id="btn_properties">
                     <property name="label">gtk-properties</property>
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="use_stock">True</property>

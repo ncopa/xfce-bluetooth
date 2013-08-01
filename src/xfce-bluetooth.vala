@@ -6,7 +6,8 @@ public class XfceBluetoothApp : GLib.Object {
     public CheckButton powered_checkbutton;
     public SpinButton discoverable_timeout_spinbutton;
 
-    private Entry name_entry;
+    string? selected_device = null;
+    Button device_remove_button;
 
     DBusObjectManager manager;
     BluezAdapter adapter;
@@ -111,6 +112,7 @@ public class XfceBluetoothApp : GLib.Object {
             discoverable_timeout_spinbutton.adjustment.value_changed.connect((a) => {
                 adapter.discoverable_timeout = (uint32) a.value;
             });
+            device_remove_button = builder.get_object("btn_remove") as Button;
 
             find_devices();
 
@@ -128,6 +130,8 @@ public class XfceBluetoothApp : GLib.Object {
             treeview_add_toggle_col(device_treeview, "Paired", DevCols.PAIRED);
             treeview_add_toggle_col(device_treeview, "Trusted", DevCols.TRUSTED);
             treeview_add_toggle_col(device_treeview, "Blocked", DevCols.BLOCKED);
+
+            device_treeview.get_selection().changed.connect(on_device_selection_changed);
 
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
@@ -168,12 +172,22 @@ public class XfceBluetoothApp : GLib.Object {
 
     [CCode (instance_pos = -1)]
     public void on_remove(Button button) {
-        stdout.printf("Button remove\n");
+        stdout.printf("Remove %s\n", selected_device);
     }
 
     [CCode (instance_pos = -1)]
-    public void on_device_cursor_changed(TreeView view, TreePath path, TreeViewColumn column){
-        stdout.printf("device cursor changed\n");
+    public void on_device_selection_changed(TreeSelection selection) {
+        TreeModel model;
+        TreeIter iter;
+        if (selection.get_selected(out model, out iter)) {
+            Value objpath = Value(typeof(string));
+            model.get_value(iter, DevCols.OBJPATH, out objpath);
+            selected_device = objpath.get_string();
+            device_remove_button.sensitive = true;
+        } else {
+            selected_device = null;
+            device_remove_button.sensitive = false;
+        }
     }
 }
 
