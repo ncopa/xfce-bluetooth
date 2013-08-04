@@ -10,7 +10,7 @@ public class XfceBluetoothApp : GLib.Object {
     Button device_remove_button;
 
     DBusObjectManager manager;
-    BluezAdapter adapter;
+    BluezAdapterProperties adapter;
     HashTable<ObjectPath, HashTable<string, HashTable<string, Variant>>> objects;
 
     ListStore device_store;
@@ -21,7 +21,7 @@ public class XfceBluetoothApp : GLib.Object {
             props = ifaces.get("org.bluez.Adapter1");
             if (props == null)
                 return; /* continue */
-            adapter = new BluezAdapter(path, props);
+            adapter = new BluezAdapterProperties(path, props);
         });
     }
 

@@ -84,7 +84,7 @@ public abstract class BluezInterface : GLib.Object {
 }
 
 /* http://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc/adapter-api.txt */
-public class BluezAdapter : BluezInterface {
+public class BluezAdapterProperties : BluezInterface {
     private string[] _uuids;
 
     public string address {
@@ -141,7 +141,7 @@ public class BluezAdapter : BluezInterface {
         }
     }
 
-    public BluezAdapter(ObjectPath path,
+    public BluezAdapterProperties(ObjectPath path,
                         HashTable<string, Variant>? props = null) {
         base("org.bluez.Adapter1", path, props);
     }
