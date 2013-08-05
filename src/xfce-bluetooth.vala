@@ -138,20 +138,16 @@ public class XfceBluetoothApp : GLib.Object {
             return;
         }
         builder.connect_signals(this);
-        adapter.notify["powered"].connect((s, p) => {
-            stdout.printf("adapter.notify[powered]\n");
-            powered_checkbutton.set_active(adapter.powered);
-            discoverable_checkbutton.sensitive = adapter.powered
-                && !adapter.discoverable;
+        adapter.powered_changed.connect((a) => {
+            powered_checkbutton.set_active(a.powered);
+            discoverable_checkbutton.sensitive = a.powered && !a.discoverable;
         });
-        adapter.notify["discoverable"].connect((s, p) => {
-            stdout.printf("adapter.notify[discoverable]\n");
-            discoverable_checkbutton.set_active(adapter.discoverable);
-            discoverable_checkbutton.sensitive = !adapter.discoverable;
+        adapter.discoverable_changed.connect((a) => {
+            discoverable_checkbutton.set_active(a.discoverable);
+            discoverable_checkbutton.sensitive = !a.discoverable;
         });
-        adapter.notify["discoverable_timeout"].connect((s, p) => {
-            stdout.printf("adapter.notify[discoverable_timeout]\n");
-            discoverable_timeout_spinbutton.adjustment.value = adapter.discoverable_timeout;
+        adapter.discoverable_timeout_changed.connect((a) => {
+            discoverable_timeout_spinbutton.adjustment.value = a.discoverable_timeout;
         });
     }
 

@@ -68,7 +68,7 @@ public abstract class BluezInterface : GLib.Object {
         }
     }
 
-    public abstract void on_property_changed(string key, Variant val);
+    public abstract void property_changed(string key, Variant val);
 
     public void on_properties_changed(string iface,
                                       HashTable <string, Variant> changed,
@@ -78,7 +78,7 @@ public abstract class BluezInterface : GLib.Object {
                 return; /* continue foreach */
             set_cache(key, val);
             stdout.printf("BluezInterface: %s: %s=%s\n", iface, key, val.print(false));
-            on_property_changed(key, val);
+            property_changed(key, val);
         });
     }
 }
@@ -146,28 +146,36 @@ public class BluezAdapterProperties : BluezInterface {
         base("org.bluez.Adapter1", path, props);
     }
 
-    public override void on_property_changed(string prop, Variant val) {
+    public signal void alias_changed();
+    public signal void powered_changed();
+    public signal void discoverable_changed();
+    public signal void pairable_changed();
+    public signal void pairable_timeout_changed();
+    public signal void discoverable_timeout_changed();
+    public signal void discovering_changed();
+
+    public override void property_changed(string prop, Variant val) {
         switch (prop) {
         case "Alias":
-            this.alias = val.get_string();
+            alias_changed();
             break;
         case "Powered":
-            this.powered = val.get_boolean();
+            powered_changed();
             break;
         case "Discoverable":
-            this.discoverable = val.get_boolean();
+            discoverable_changed();
             break;
         case "Pairable":
-            this.pairable = val.get_boolean();
+            pairable_changed();
             break;
         case "PairableTimeout":
-            this.pairable_timeout = val.get_uint32();
+            pairable_timeout_changed();
             break;
         case "DiscoverableTimeout":
-            this.discoverable_timeout = val.get_uint32();
+            discoverable_timeout_changed();
             break;
         case "Discovering":
-            this.discovering = val.get_boolean();
+            discovering_changed();
             break;
         }
     }
