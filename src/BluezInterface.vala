@@ -30,6 +30,16 @@ interface BluezAgentManagerBus : GLib.Object {
     public abstract void request_default_agent(ObjectPath agent) throws DBusError, IOError;
 }
 
+[DBus (name = "org.bluez.Adapter1")]
+public interface BluezAdapterBus : GLib.Object {
+    [DBus (name = "RemoveDevice")]
+    public abstract void remove_device(ObjectPath device) throws DBusError, IOError;
+    [DBus (name = "StartDiscovery")]
+    public abstract void start_discovery() throws DBusError, IOError;
+    [DBus (name = "StopDiscovery")]
+    public abstract void stop_discovery() throws DBusError, IOError;
+}
+
 public abstract class BluezInterface : GLib.Object {
     DBusProperties bus;
     string iface_name;
@@ -86,6 +96,7 @@ public abstract class BluezInterface : GLib.Object {
 /* http://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc/adapter-api.txt */
 public class BluezAdapterProperties : BluezInterface {
     private string[] _uuids;
+    private BluezAdapterBus adapter_bus;
 
     public string address {
         get { return this.get_cache("Address").get_string(); }
@@ -144,6 +155,19 @@ public class BluezAdapterProperties : BluezInterface {
     public BluezAdapterProperties(ObjectPath path,
                         HashTable<string, Variant>? props = null) {
         base("org.bluez.Adapter1", path, props);
+        adapter_bus = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", path);
+    }
+    
+    public void remove_device(ObjectPath path) {
+        adapter_bus.remove_device(path);
+    }
+
+    public void start_discovery() {
+        adapter_bus.start_discovery();
+    }
+
+    public void stop_discovery() {
+        adapter_bus.stop_discovery();
     }
 
     public signal void alias_changed();
