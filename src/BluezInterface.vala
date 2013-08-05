@@ -23,7 +23,7 @@ interface DBusProperties : GLib.Object {
 }
 
 [DBus (name = "org.bluez.AgentManager1")]
-interface BluezAgentManager : GLib.Object {
+interface BluezAgentManagerBus : GLib.Object {
     [DBus (name = "RegisterAgent")]
     public abstract void register_agent(ObjectPath agent, string capability) throws DBusError, IOError;
     [DBus (name = "RequestDefaultAgent")]

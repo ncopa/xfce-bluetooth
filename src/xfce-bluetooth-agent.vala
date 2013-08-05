@@ -35,7 +35,7 @@ public class BluezAgent : GLib.Object {
 
 public class XfceBluetoothAgent : GLib.Object {
     Gtk.StatusIcon trayicon;
-    BluezAgentManager manager;
+    BluezAgentManagerBus manager;
     BluezAgent agent;
     string busname;
     DBusConnection bus;
