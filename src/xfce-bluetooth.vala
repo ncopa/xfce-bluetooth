@@ -140,15 +140,19 @@ public class XfceBluetoothApp : GLib.Object {
         builder.connect_signals(this);
         adapter.powered_changed.connect((a) => {
             powered_checkbutton.set_active(a.powered);
-            discoverable_checkbutton.sensitive = a.powered && !a.discoverable;
+            set_widgets_sensibility();
         });
         adapter.discoverable_changed.connect((a) => {
             discoverable_checkbutton.set_active(a.discoverable);
-            discoverable_checkbutton.sensitive = !a.discoverable;
+            set_widgets_sensibility();
         });
         adapter.discoverable_timeout_changed.connect((a) => {
             discoverable_timeout_spinbutton.adjustment.value = a.discoverable_timeout;
         });
+    }
+
+    void set_widgets_sensibility() {
+        discoverable_checkbutton.sensitive = adapter.powered && !adapter.discoverable;
     }
 
     [CCode (instance_pos = -1)]
@@ -159,11 +163,13 @@ public class XfceBluetoothApp : GLib.Object {
     [CCode (instance_pos = -1)]
     public void on_discoverable(ToggleButton button) {
         adapter.discoverable = button.get_active();
+        set_widgets_sensibility();
     }
 
     [CCode (instance_pos = -1)]
     public void on_powered(ToggleButton button) {
         adapter.powered = button.get_active();
+        set_widgets_sensibility();
     }
 
     [CCode (instance_pos = -1)]
