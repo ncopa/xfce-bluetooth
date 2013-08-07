@@ -40,6 +40,22 @@ public interface BluezAdapterBus : GLib.Object {
     public abstract void stop_discovery() throws DBusError, IOError;
 }
 
+[DBus (name = "org.bluez.Device1")]
+interface BluezDeviceBus : GLib.Object {
+    [DBus (name = "CancelPairing")]
+    public abstract void cancel_pairing() throws DBusError, IOError;
+    [DBus (name = "Connect")]
+    public abstract void connect() throws DBusError, IOError;
+    [DBus (name = "ConnectProfile")]
+    public abstract void connect_profile(string UUID) throws DBusError, IOError;
+    [DBus (name = "Disconnect")]
+    public abstract void disconnect() throws DBusError, IOError;
+    [DBus (name = "DisonnectProfile")]
+    public abstract void disconnect_profile(string UUID) throws DBusError, IOError;
+    [DBus (name = "Pair")]
+    public abstract void pair() throws DBusError, IOError;
+}
+
 public abstract class BluezInterface : GLib.Object {
     DBusProperties bus;
     string iface_name;
@@ -203,4 +219,101 @@ public class BluezAdapterProperties : BluezInterface {
             break;
         }
     }
+}
+
+/* http://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc/device-api.txt */
+public class BluezDevice : BluezInterface {
+    private string[] _uuids;
+
+    public string address {
+        get { return this.get_cache("Address").get_string(); }
+    }
+
+    public string name {
+        get { return this.get_cache("Name").get_string(); }
+    }
+
+    public string icon {
+        get { return this.get_cache("Icon").get_string(); }
+    }
+
+    public uint32 class {
+        get { return this.get_cache("Class").get_uint32(); }
+    }
+
+    public uint16 appearance {
+        get { return this.get_cache("Appearance").get_uint16(); }
+    }
+
+    public weak string[] uuids {
+        get {
+            _uuids = this.get_cache("UUIDs").get_strv();
+            return _uuids;
+        }
+    }
+
+    public bool paired {
+        get { return this.get_cache("Paired").get_boolean(); }
+        private set { /* should aready be set, but needed for notify */ }
+    }
+
+    public bool connected {
+        get { return this.get_cache("Connected").get_boolean(); }
+        private set { /* should aready be set, but needed for notify */ }
+    }
+
+    public bool trusted {
+        get { return this.get_cache("Trusted").get_boolean(); }
+        set { this.set_bus("Trusted", value); }
+    }
+
+    public bool blocked {
+        get { return this.get_cache("Blocked").get_boolean(); }
+        set { this.set_bus("Blocked", value); }
+    }
+
+    public string alias {
+        get { return this.get_cache("Alias").get_string(); }
+        set { this.set_bus("Alias", value); }
+    }
+
+    public string adapter {
+        get { return this.get_cache("Adapter").get_string(); }
+    }
+
+    public bool legacy_pairing {
+        get { return this.get_cache("LegacyPairing").get_boolean(); }
+    }
+
+    public BluezDevice(ObjectPath path,
+                        HashTable<string, Variant>? props = null) {
+        base("org.bluez.Device1", path, props);
+    }
+
+    public signal void alias_changed();
+    public signal void paired_changed();
+    public signal void connected_changed();
+    public signal void trusted_changed();
+    public signal void blocked_changed();
+
+    public override void property_changed(string prop, Variant val) {
+        switch (prop) {
+        case "Alias":
+            alias_changed();
+            break;
+        case "Paired":
+            paired_changed();
+            break;
+        case "Connected":
+            connected_changed();
+            break;
+        case "Trusted":
+            trusted_changed();
+            break;
+        case "Blocked":
+            blocked_changed();
+            break;
+        }
+    }
+
 }
