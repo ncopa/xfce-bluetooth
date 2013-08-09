@@ -1,5 +1,34 @@
 using Gtk;
 
+public class BluetoothPinDialog : Xfce.TitledDialog {
+    private Entry entry;
+    private string label_text;
+    
+    public BluetoothPinDialog(string title, string subtitle, string label) {
+        this.title = title;
+        this.label_text = label;
+        this.subtitle = subtitle;
+        create_widgets();
+    }
+    public string get_pin() {
+        return entry.get_text();
+    }
+    
+    private void create_widgets() {
+        entry = new Entry();
+        Label label = new Label(this.label_text);
+        VBox content = this.get_content_area() as VBox;
+        HBox hbox = new HBox(false, 20);
+        hbox.pack_start(label, false, true, 0);
+        hbox.pack_start(entry, false, true, 0);
+        content.pack_start(hbox, false, true, 0);
+        
+        add_button(Stock.CANCEL, ResponseType.CANCEL);
+        add_button(Stock.OK, ResponseType.OK);
+        show_all();
+    }
+}
+
 [DBus(name = "org.bluez.Agent1")]
 public class BluezAgent : GLib.Object {
     public void release() {
@@ -7,7 +36,23 @@ public class BluezAgent : GLib.Object {
     }
     public string request_pin_code(ObjectPath device) {
         stdout.printf("BluezAgent: request_pin_code(%s)\n", device);
-        return "";
+        BluetoothPinDialog dlg = new BluetoothPinDialog("Device pairing", device, "Enter PIN:");
+        dlg.show();
+        string pin = "";
+        dlg.response.connect((source, id) => {
+            switch (id) {
+            case ResponseType.OK:
+                pin = dlg.get_pin();
+                stdout.printf("got pin: %s\n", pin);
+                break;
+            case ResponseType.CANCEL:
+                stdout.printf("cancelled\n");
+                break;
+            }
+            source.destroy();
+        });
+        dlg.run();
+        return pin;
     }
     public void display_pin_code(ObjectPath device, string pincode) {
         stdout.printf("BluezAgent: display_pin_code(%s, %s)\n", device, pincode);
