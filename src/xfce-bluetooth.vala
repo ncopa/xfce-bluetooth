@@ -8,6 +8,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     string? selected_device = null;
     Button device_remove_button;
+    TreeView device_treeview;
 
     DBusObjectManager manager;
     BluezAdapterProperties adapter;
@@ -116,7 +117,7 @@ public class XfceBluetoothApp : GLib.Object {
 
             find_devices();
 
-            TreeView device_treeview = builder.get_object("device_treeview") as TreeView;
+            device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.set_model(device_store);
 
             var text = new CellRendererText();
@@ -175,6 +176,15 @@ public class XfceBluetoothApp : GLib.Object {
     [CCode (instance_pos = -1)]
     public void on_remove(Button button) {
         stdout.printf("Remove %s\n", selected_device);
+        TreeSelection selection = device_treeview.get_selection();
+        TreeModel model;
+        TreeIter iter;
+        if (selection.get_selected(out model, out iter)) {
+            Value objpath = Value(typeof(string));
+            model.get_value(iter, DevCols.OBJPATH, out objpath);
+            adapter.remove_device(new ObjectPath(objpath.get_string()));
+            device_store.remove(iter);
+        }
     }
 
     [CCode (instance_pos = -1)]
