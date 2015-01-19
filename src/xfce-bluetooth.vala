@@ -95,9 +95,9 @@ public class XfceBluetoothApp : GLib.Object {
     private void build_ui() {
         Builder builder = new Builder();
         try {
-            builder.add_from_file("bluetooth.ui");
+            builder.add_from_file("bluetooth-preferences.ui");
 
-            window = builder.get_object("window") as Window;
+            window = builder.get_object("dialog") as Window;
             window.destroy.connect(Gtk.main_quit);
 
             powered_checkbutton = builder.get_object("powered_checkbutton") as CheckButton;
