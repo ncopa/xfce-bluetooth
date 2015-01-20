@@ -90,20 +90,20 @@ public class XfceBluetoothAgent : GLib.Object {
     DBusConnection bus;
     string agent_path;
     uint reg_id;
+	private Gtk.Menu menu;
 
     public XfceBluetoothAgent() {
+		menu = new Gtk.Menu();
+		var menu_quit = new ImageMenuItem.from_stock(Stock.QUIT, null);
+		menu_quit.activate.connect(Gtk.main_quit);
+		menu.append(menu_quit);
+		menu.show_all();
+
         trayicon = new Gtk.StatusIcon.from_icon_name("bluetooth");
-        trayicon.button_press_event.connect((evt) => {
-            switch (evt.button) {
-                case 1:    // left-click
-                    print("clicked.\n");
-                    break;
-                default:   // middle & right click
-                    Gtk.main_quit();
-                    break;
-            }
-            return true;
-        });
+
+        trayicon.popup_menu.connect((button, time) => {
+			menu.popup(null, null, null, button, time);
+		});
         try {
             bus = Bus.get_sync(BusType.SYSTEM, null);
             Bus.watch_name_on_connection(bus, "org.bluez",
