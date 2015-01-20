@@ -56,6 +56,10 @@ public class BluezAgent : GLib.Object {
     }
     public void display_pin_code(ObjectPath device, string pincode) {
         stdout.printf("BluezAgent: display_pin_code(%s, %s)\n", device, pincode);
+        Gtk.MessageDialog dlg = new Gtk.MessageDialog(null, Gtk.DialogFlags.MODAL,
+                                                      Gtk.MessageType.INFO,
+                                                      Gtk.ButtonsType.OK, "Pincode for %s: %s", device, pincode);
+        dlg.run();
     }
     public uint32 request_pass_key(ObjectPath device) {
         stdout.printf("BluezAgent: request_pass_key(%s)\n", device);
