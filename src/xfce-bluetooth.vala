@@ -7,7 +7,7 @@ public class XfceBluetoothApp : GLib.Object {
     public SpinButton discoverable_timeout_spinbutton;
 
     string? selected_device = null;
-    Button device_remove_button;
+    ToolButton device_remove_button;
     TreeView device_treeview;
 
     DBusObjectManager manager;
@@ -113,7 +113,7 @@ public class XfceBluetoothApp : GLib.Object {
             discoverable_timeout_spinbutton.adjustment.value_changed.connect((a) => {
                 adapter.discoverable_timeout = (uint32) a.value;
             });
-            device_remove_button = builder.get_object("btn_remove") as Button;
+            device_remove_button = builder.get_object("btn_remove") as ToolButton;
 
             find_devices();
 

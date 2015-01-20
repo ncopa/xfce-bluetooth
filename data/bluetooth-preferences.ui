@@ -80,9 +80,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="orientation">vertical</property>
+                    <property name="show_arrow">False</property>
                     <property name="icon_size_set">True</property>
                     <child>
-                      <object class="GtkToolButton" id="b_search">
+                      <object class="GtkToolButton" id="btn_search">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
@@ -96,7 +97,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="b_add">
+                      <object class="GtkToolButton" id="btn_add">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
@@ -109,7 +110,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="b_bond">
+                      <object class="GtkToolButton" id="btn_pair">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
@@ -122,7 +123,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="b_trust">
+                      <object class="GtkToolButton" id="btn_trust">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
@@ -135,12 +136,12 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="b_setup">
+                      <object class="GtkToolButton" id="btn_properties">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
                         <property name="is_important">True</property>
-                        <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Setup...</property>
+                        <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Properties...</property>
                         <property name="stock_id">gtk-properties</property>
                       </object>
                       <packing>
@@ -149,12 +150,13 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="b_remove">
+                      <object class="GtkToolButton" id="btn_remove">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Remove</property>
                         <property name="stock_id">gtk-delete</property>
+                        <signal name="clicked" handler="xfce_bluetooth_app_on_remove" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
