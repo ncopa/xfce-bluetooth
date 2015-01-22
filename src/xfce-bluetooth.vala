@@ -39,6 +39,19 @@ public class XfceBluetoothApp : GLib.Object {
         N_COLUMNS
     }
 
+    private void add_device(ObjectPath path, HashTable<string, Variant> props) {
+        TreeIter iter;
+        device_store.append(out iter);
+        device_store.set(iter,
+                         DevCols.OBJPATH, path,
+                         DevCols.ICON, props.get("Icon").get_string(),
+                         DevCols.ALIAS, props.get("Alias").get_string(),
+                         DevCols.CONNECTED, props.get("Connected").get_boolean(),
+                         DevCols.PAIRED, props.get("Paired").get_boolean(),
+                         DevCols.TRUSTED, props.get("Trusted").get_boolean(),
+                         DevCols.BLOCKED, props.get("Blocked").get_boolean());
+    }
+
     private void find_devices() {
         device_store = new ListStore(DevCols.N_COLUMNS,
                                      typeof(string),
@@ -52,16 +65,7 @@ public class XfceBluetoothApp : GLib.Object {
             HashTable<string, Variant>? props;
             props = ifaces.get("org.bluez.Device1");
             if (props != null) {
-                TreeIter iter;
-                device_store.append(out iter);
-                device_store.set(iter,
-                                 DevCols.OBJPATH, path,
-                                 DevCols.ICON, props.get("Icon").get_string(),
-                                 DevCols.ALIAS, props.get("Alias").get_string(),
-                                 DevCols.CONNECTED, props.get("Connected").get_boolean(),
-                                 DevCols.PAIRED, props.get("Paired").get_boolean(),
-                                 DevCols.TRUSTED, props.get("Trusted").get_boolean(),
-                                 DevCols.BLOCKED, props.get("Blocked").get_boolean());
+	        add_device(path, props);
             }
         });
     }
@@ -245,12 +249,19 @@ public class XfceBluetoothApp : GLib.Object {
 
     [CCode (instance_pos = -1)]
     public void on_interfaces_added(ObjectPath path,
-									   HashTable<string, HashTable<string, Variant>> interfaces) {
-		stdout.printf("interfaces added: %s\n", path);
-		interfaces.foreach((key, val) => {
-			stdout.printf("\t%s\n", key);
-		});
-	}
+				   HashTable<string, HashTable<string, Variant>> interfaces) {
+        objects.insert(path, interfaces);
+
+        HashTable<string, Variant>? props;
+        props = interfaces.get("org.bluez.Device1");
+        if (props != null)
+            add_device(path, props);
+
+        stdout.printf("interfaces added: %s\n", path);
+        interfaces.foreach((key, val) => {
+            stdout.printf("\t%s\n", key);
+        });
+    }
 
 }
 
