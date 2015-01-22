@@ -71,6 +71,7 @@ public class XfceBluetoothApp : GLib.Object {
             manager = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", "/");
             objects = manager.get_managed_objects();
             find_adapter();
+            manager.interfaces_added.connect(on_interfaces_added);
 
             stdout.printf("Find adapter: %s (%s)\n", adapter.alias, adapter.address);
             objects.foreach((path ,interfaces)=> {
@@ -241,6 +242,16 @@ public class XfceBluetoothApp : GLib.Object {
             device_connect_button.sensitive = false;
         }
     }
+
+    [CCode (instance_pos = -1)]
+    public void on_interfaces_added(ObjectPath path,
+									   HashTable<string, HashTable<string, Variant>> interfaces) {
+		stdout.printf("interfaces added: %s\n", path);
+		interfaces.foreach((key, val) => {
+			stdout.printf("\t%s\n", key);
+		});
+	}
+
 }
 
 int main (string[] args) {
