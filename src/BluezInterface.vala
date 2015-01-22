@@ -3,6 +3,9 @@
 interface DBusObjectManager : GLib.Object {
     [DBus (name = "GetManagedObjects")]
     public abstract HashTable<ObjectPath, HashTable<string, HashTable<string, Variant>>> get_managed_objects() throws DBusError, IOError;
+    [DBus (name = "InterfacesAdded")]
+    public signal void interfaces_added(ObjectPath path,
+			   HashTable<string, HashTable<string, Variant>> interfaces);
 }
 
 [DBus (name = "org.freedesktop.DBus.Properties")]
