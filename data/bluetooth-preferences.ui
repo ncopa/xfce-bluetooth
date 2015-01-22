@@ -89,6 +89,7 @@
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Search</property>
                         <property name="stock_id">gtk-find</property>
+                        <signal name="clicked" handler="xfce_bluetooth_app_on_start_discovery" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>

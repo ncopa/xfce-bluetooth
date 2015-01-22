@@ -9,6 +9,7 @@ public class XfceBluetoothApp : GLib.Object {
     string? selected_device = null;
     ToolButton device_remove_button;
     ToolButton device_connect_button;
+    ToolButton adapter_start_discovery_button;
     TreeView device_treeview;
 
     DBusObjectManager manager;
@@ -117,8 +118,11 @@ public class XfceBluetoothApp : GLib.Object {
             discoverable_timeout_spinbutton.adjustment.value_changed.connect((a) => {
                 adapter.discoverable_timeout = (uint32) a.value;
             });
+
+            adapter_start_discovery_button = builder.get_object("btn_search") as ToolButton;
             device_remove_button = builder.get_object("btn_remove") as ToolButton;
             device_connect_button = builder.get_object("btn_connect") as ToolButton;
+            adapter_start_discovery_button = builder.get_object("btn_search") as ToolButton;
 
             find_devices();
 
@@ -150,6 +154,9 @@ public class XfceBluetoothApp : GLib.Object {
             return;
         }
         builder.connect_signals(this);
+        adapter.discovering_changed.connect((a) => {
+            adapter_start_discovery_button.sensitive = !a.discovering;
+        });
         adapter.powered_changed.connect((a) => {
             powered_checkbutton.set_active(a.powered);
             set_widgets_sensibility();
@@ -182,6 +189,11 @@ public class XfceBluetoothApp : GLib.Object {
     public void on_powered(ToggleButton button) {
         adapter.powered = button.get_active();
         set_widgets_sensibility();
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_start_discovery(Button button) {
+        adapter.start_discovery();
     }
 
     [CCode (instance_pos = -1)]
