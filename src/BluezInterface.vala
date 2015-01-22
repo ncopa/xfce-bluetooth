@@ -224,6 +224,7 @@ public class BluezAdapterProperties : BluezInterface {
 /* http://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc/device-api.txt */
 public class BluezDevice : BluezInterface {
     private string[] _uuids;
+    private BluezDeviceBus device_bus;
 
     public string address {
         get { return this.get_cache("Address").get_string(); }
@@ -288,6 +289,11 @@ public class BluezDevice : BluezInterface {
     public BluezDevice(ObjectPath path,
                         HashTable<string, Variant>? props = null) {
         base("org.bluez.Device1", path, props);
+        device_bus = Bus.get_proxy_sync (BusType.SYSTEM, "org.bluez", path);
+    }
+
+    public void connect() {
+        device_bus.connect();
     }
 
     public signal void alias_changed();
