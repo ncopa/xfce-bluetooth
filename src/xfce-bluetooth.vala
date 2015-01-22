@@ -91,9 +91,9 @@ public class XfceBluetoothApp : GLib.Object {
         build_ui();
     }
 
-    private void treeview_add_toggle_col(TreeView v, string title, DevCols col) {
+    private void treeview_add_toggle_col(TreeView v, string title, DevCols col, bool sensitive) {
             var toggle = new CellRendererToggle();
-            toggle.sensitive = false;
+            toggle.sensitive = sensitive;
             v.insert_column_with_attributes (-1, title, toggle, "active", col);
     }
 
@@ -142,10 +142,10 @@ public class XfceBluetoothApp : GLib.Object {
             col.add_attribute(text, "text", DevCols.ALIAS);
             device_treeview.append_column(col);
 
-            treeview_add_toggle_col(device_treeview, "Connected", DevCols.CONNECTED);
-            treeview_add_toggle_col(device_treeview, "Paired", DevCols.PAIRED);
-            treeview_add_toggle_col(device_treeview, "Trusted", DevCols.TRUSTED);
-            treeview_add_toggle_col(device_treeview, "Blocked", DevCols.BLOCKED);
+            treeview_add_toggle_col(device_treeview, "Connected", DevCols.CONNECTED, false);
+            treeview_add_toggle_col(device_treeview, "Paired", DevCols.PAIRED, false);
+            treeview_add_toggle_col(device_treeview, "Trusted", DevCols.TRUSTED, true);
+            treeview_add_toggle_col(device_treeview, "Blocked", DevCols.BLOCKED, true);
 
             device_treeview.get_selection().changed.connect(on_device_selection_changed);
 
