@@ -85,7 +85,6 @@
                     <child>
                       <object class="GtkToolButton" id="btn_search">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
                         <property name="is_important">True</property>
                         <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Search</property>
@@ -97,12 +96,13 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="btn_add">
+                      <object class="GtkToolButton" id="btn_connect">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Add</property>
-                        <property name="stock_id">gtk-add</property>
+                        <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Connect</property>
+                        <property name="stock_id">gtk-connect</property>
+                        <signal name="clicked" handler="xfce_bluetooth_app_on_connect" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>

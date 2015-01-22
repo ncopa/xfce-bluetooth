@@ -8,6 +8,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     string? selected_device = null;
     ToolButton device_remove_button;
+    ToolButton device_connect_button;
     TreeView device_treeview;
 
     DBusObjectManager manager;
@@ -28,6 +29,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     private enum DevCols {
         OBJPATH,
+        ICON,
         ALIAS,
         CONNECTED,
         PAIRED,
@@ -38,6 +40,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     private void find_devices() {
         device_store = new ListStore(DevCols.N_COLUMNS,
+                                     typeof(string),
                                      typeof(string),
                                      typeof(string),
                                      typeof(bool),
@@ -52,6 +55,7 @@ public class XfceBluetoothApp : GLib.Object {
                 device_store.append(out iter);
                 device_store.set(iter,
                                  DevCols.OBJPATH, path,
+                                 DevCols.ICON, props.get("Icon").get_string(),
                                  DevCols.ALIAS, props.get("Alias").get_string(),
                                  DevCols.CONNECTED, props.get("Connected").get_boolean(),
                                  DevCols.PAIRED, props.get("Paired").get_boolean(),
@@ -114,6 +118,7 @@ public class XfceBluetoothApp : GLib.Object {
                 adapter.discoverable_timeout = (uint32) a.value;
             });
             device_remove_button = builder.get_object("btn_remove") as ToolButton;
+            device_connect_button = builder.get_object("btn_connect") as ToolButton;
 
             find_devices();
 
@@ -122,6 +127,12 @@ public class XfceBluetoothApp : GLib.Object {
 
             var text = new CellRendererText();
             var col = new TreeViewColumn();
+            col.set_title("Icon");
+            col.pack_start(text, true);
+            col.add_attribute(text, "text", DevCols.ICON);
+            device_treeview.append_column(col);
+
+            col = new TreeViewColumn();
             col.set_title("Device");
             col.pack_start(text, true);
             col.add_attribute(text, "text", DevCols.ALIAS);
@@ -188,6 +199,20 @@ public class XfceBluetoothApp : GLib.Object {
     }
 
     [CCode (instance_pos = -1)]
+    public void on_connect(Button button) {
+        stdout.printf("connect %s\n", selected_device);
+        TreeSelection selection = device_treeview.get_selection();
+        TreeModel model;
+        TreeIter iter;
+        if (selection.get_selected(out model, out iter)) {
+            Value objpath = Value(typeof(string));
+            model.get_value(iter, DevCols.OBJPATH, out objpath);
+            var device = new BluezDevice(new ObjectPath(objpath.get_string()));
+            device.connect();
+        }
+    }
+
+    [CCode (instance_pos = -1)]
     public void on_device_selection_changed(TreeSelection selection) {
         TreeModel model;
         TreeIter iter;
@@ -195,10 +220,13 @@ public class XfceBluetoothApp : GLib.Object {
             Value objpath = Value(typeof(string));
             model.get_value(iter, DevCols.OBJPATH, out objpath);
             selected_device = objpath.get_string();
+            stdout.printf("Selected %s\n", selected_device);
             device_remove_button.sensitive = true;
+            device_connect_button.sensitive = true;
         } else {
             selected_device = null;
             device_remove_button.sensitive = false;
+            device_connect_button.sensitive = false;
         }
     }
 }
