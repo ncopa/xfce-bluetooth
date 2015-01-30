@@ -161,13 +161,14 @@ public class XfceBluetoothApp : GLib.Object {
             device_treeview = builder.get_object("device_treeview") as TreeView;
             device_treeview.set_model(device_store);
 
-            var text = new CellRendererText();
+			var iconcell = new CellRendererPixbuf();
             var col = new TreeViewColumn();
-            col.set_title("Icon");
-            col.pack_start(text, true);
-            col.add_attribute(text, "text", DevCols.ICON);
+            //col.set_title("Icon");
+            col.pack_start(iconcell, true);
+            col.add_attribute(iconcell, "icon-name", DevCols.ICON);
             device_treeview.append_column(col);
 
+            var text = new CellRendererText();
             col = new TreeViewColumn();
             col.set_title("Device");
             col.pack_start(text, true);
