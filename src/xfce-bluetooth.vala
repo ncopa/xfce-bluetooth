@@ -96,6 +96,13 @@ public class XfceBluetoothApp : GLib.Object {
         build_ui();
     }
 
+    private BluezDevice device_from_tree_iter(TreeIter iter) {
+		Value objpath = Value(typeof(string));
+        device_store.get_value(iter, DevCols.OBJPATH, out objpath);
+        return new BluezDevice(new ObjectPath(objpath.get_string()));
+    }
+
+
     private void treeview_add_toggle_col(TreeView v, string title, DevCols col, bool sensitive) {
             var toggle = new CellRendererToggle();
             toggle.sensitive = sensitive;
@@ -105,10 +112,8 @@ public class XfceBluetoothApp : GLib.Object {
 				TreeIter iter;
 				device_store.get_iter(out iter, treepath);
 
-				Value objpath = Value(typeof(string));
-                device_store.get_value(iter, DevCols.OBJPATH, out objpath);
+				BluezDevice device = device_from_tree_iter(iter);
 
-                var device = new BluezDevice(new ObjectPath(objpath.get_string()));
                 switch (col) {
 					case DevCols.TRUSTED:
 						device.trusted = newvalue;
@@ -119,7 +124,7 @@ public class XfceBluetoothApp : GLib.Object {
 			    }
 
 				device_store.set(iter, col, newvalue);
-				stderr.printf("tree path: %s\tobject path: %s\n", treepathstr, objpath.get_string());
+				stderr.printf("tree path: %s\tobject path: %s\n", treepathstr, device.object_path);
 			});
             v.insert_column_with_attributes (-1, title, toggle, "active", col);
     }
@@ -244,9 +249,7 @@ public class XfceBluetoothApp : GLib.Object {
         TreeModel model;
         TreeIter iter;
         if (selection.get_selected(out model, out iter)) {
-            Value objpath = Value(typeof(string));
-            model.get_value(iter, DevCols.OBJPATH, out objpath);
-            var device = new BluezDevice(new ObjectPath(objpath.get_string()));
+			BluezDevice device = device_from_tree_iter(iter);
             device.connect();
         }
     }
