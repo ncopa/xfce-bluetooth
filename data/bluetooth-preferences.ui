@@ -124,19 +124,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="btn_trust">
-                        <property name="visible">True</property>
-                        <property name="sensitive">False</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes" comments="translators: toolbar item: keep it as short as possible">Trust</property>
-                        <property name="icon_name">trust</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkToolButton" id="btn_properties">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>

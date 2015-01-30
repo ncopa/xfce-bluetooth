@@ -99,6 +99,28 @@ public class XfceBluetoothApp : GLib.Object {
     private void treeview_add_toggle_col(TreeView v, string title, DevCols col, bool sensitive) {
             var toggle = new CellRendererToggle();
             toggle.sensitive = sensitive;
+            toggle.toggled.connect((toggle, treepathstr) => {
+				bool newvalue = !toggle.active;
+				TreePath treepath = new Gtk.TreePath.from_string (treepathstr);
+				TreeIter iter;
+				device_store.get_iter(out iter, treepath);
+
+				Value objpath = Value(typeof(string));
+                device_store.get_value(iter, DevCols.OBJPATH, out objpath);
+
+                var device = new BluezDevice(new ObjectPath(objpath.get_string()));
+                switch (col) {
+					case DevCols.TRUSTED:
+						device.trusted = newvalue;
+						break;
+					case DevCols.BLOCKED:
+					    device.blocked = newvalue;
+					    break;
+			    }
+
+				device_store.set(iter, col, newvalue);
+				stderr.printf("tree path: %s\tobject path: %s\n", treepathstr, objpath.get_string());
+			});
             v.insert_column_with_attributes (-1, title, toggle, "active", col);
     }
 
