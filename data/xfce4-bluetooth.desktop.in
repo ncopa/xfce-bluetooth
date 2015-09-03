@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Name=Bluetooth preferences
+GenericName=Bluetooth preferences
+Comment=Settings for the Xfce Bluetooth Manager
+Exec=@@xfce4bluetooth_execdir@@/xfce4-bluetooth
+Icon=bluetooth
+Terminal=false
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;
+OnlyShowIn=XFCE;
+StartupNotify=true
+X-XfcePluggable=true
+X-XfceHelpComponent=xfce-bluetooth
+X-XfceHelpPage=start
+

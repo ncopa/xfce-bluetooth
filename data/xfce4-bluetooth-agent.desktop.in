@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Xfce Bluetooth
+Comment=The Xfce Bluetooth Agent
+Exec=@@xfce4bluetooth_execdir@@/xfce-bluetooth-agent
+Icon=bluetooth
+Terminal=false
+Type=Application
+StartupNotify=false
+OnlyShowIn=XFCE;
