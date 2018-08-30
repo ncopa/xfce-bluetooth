@@ -8,7 +8,7 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0])
 PKG_CHECK_MODULES([GIO], [gio-2.0])
 PKG_CHECK_MODULES([GMODULE], [gmodule-2.0])
 PKG_CHECK_MODULES([XFCE4_VALA], [xfce4-vala])
-PKG_CHECK_MODULES([LIBXFCE4UI], [libxfce4ui-1])
+PKG_CHECK_MODULES([LIBXFCE4UI], [libxfce4ui-2])
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile

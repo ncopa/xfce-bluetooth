@@ -16,7 +16,7 @@ public class XfceBluetoothApp : GLib.Object {
     BluezAdapterProperties adapter;
     HashTable<ObjectPath, HashTable<string, HashTable<string, Variant>>> objects;
 
-    ListStore device_store;
+    Gtk.ListStore device_store;
 
     private void find_adapter() {
         objects.foreach((path, ifaces) => {
@@ -53,7 +53,7 @@ public class XfceBluetoothApp : GLib.Object {
     }
 
     private void find_devices() {
-        device_store = new ListStore(DevCols.N_COLUMNS,
+        device_store = new Gtk.ListStore(DevCols.N_COLUMNS,
                                      typeof(string),
                                      typeof(string),
                                      typeof(string),
@@ -239,7 +239,7 @@ public class XfceBluetoothApp : GLib.Object {
             Value objpath = Value(typeof(string));
             model.get_value(iter, DevCols.OBJPATH, out objpath);
             adapter.remove_device(new ObjectPath(objpath.get_string()));
-            device_store.remove(iter);
+            device_store.remove(ref iter);
         }
     }
 
