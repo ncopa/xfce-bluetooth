@@ -147,6 +147,12 @@ public class XfceBluetoothApp : GLib.Object {
 			discovering_spinner.stop();
 		}
 	}
+	private void set_powered(bool state) {
+		adapter.powered = state;
+		set_discoverable(state);
+		set_widgets_sensibility();
+	}
+
     private void build_ui() {
         Builder builder = new Builder();
         try {
@@ -161,6 +167,9 @@ public class XfceBluetoothApp : GLib.Object {
 
             powered_switch = builder.get_object("powered_switch") as Gtk.Switch;
             powered_switch.set_active(adapter.powered);
+            powered_switch.notify["active"].connect(()=> {
+				set_powered(powered_switch.active);
+			});
 
 			visible_label = builder.get_object("visible_label") as Gtk.Label;
 			alias_label = builder.get_object("alias_label") as Gtk.Label;
@@ -197,7 +206,7 @@ public class XfceBluetoothApp : GLib.Object {
 
             device_treeview.get_selection().changed.connect(on_device_selection_changed);
 			set_discoverable(true);
-			update_discovering_spinner(false);
+			set_widgets_sensibility();
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
             return;
@@ -221,6 +230,7 @@ public class XfceBluetoothApp : GLib.Object {
     void set_widgets_sensibility() {
 		set_visibility_label();
 		device_treeview.sensitive = adapter.powered;
+		update_discovering_spinner(false);
     }
 
     [CCode (instance_pos = -1)]

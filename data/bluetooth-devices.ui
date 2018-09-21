@@ -87,7 +87,6 @@
                   <object class="GtkSwitch" id="powered_switch">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <signal name="activate" handler="xfce_bluetooth_app_on_powered" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
