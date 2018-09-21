@@ -3,15 +3,12 @@ using Gtk;
 public class XfceBluetoothApp : GLib.Object {
     public Window window;
     public Switch powered_switch;
-    public SpinButton discoverable_timeout_spinbutton;
 
     string? selected_device = null;
-    ToolButton device_remove_button;
-    ToolButton device_connect_button;
-    ToolButton adapter_start_discovery_button;
     TreeView device_treeview;
     Label alias_label;
     Label visible_label;
+    Spinner discovering_spinner;
 
     DBusObjectManager manager;
     BluezAdapterProperties adapter;
@@ -143,6 +140,13 @@ public class XfceBluetoothApp : GLib.Object {
 		visible_label.set_label(is_discoverable() ? "Visible as" : "Not visible");
 	}
 
+	private void update_discovering_spinner(bool state) {
+		if (adapter.discovering || state) {
+			discovering_spinner.start();
+		} else {
+			discovering_spinner.stop();
+		}
+	}
     private void build_ui() {
         Builder builder = new Builder();
         try {
@@ -161,6 +165,8 @@ public class XfceBluetoothApp : GLib.Object {
 			visible_label = builder.get_object("visible_label") as Gtk.Label;
 			alias_label = builder.get_object("alias_label") as Gtk.Label;
 			alias_label.set_label(adapter.alias);
+
+			discovering_spinner = builder.get_object("discovering_spinner") as Gtk.Spinner;
             find_devices();
 
             device_treeview = builder.get_object("device_treeview") as TreeView;
@@ -189,6 +195,7 @@ public class XfceBluetoothApp : GLib.Object {
 
             device_treeview.get_selection().changed.connect(on_device_selection_changed);
 			set_discoverable(true);
+			update_discovering_spinner(false);
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
             return;
@@ -198,7 +205,7 @@ public class XfceBluetoothApp : GLib.Object {
 			alias_label.set_label(a.alias);
 		});
         adapter.discovering_changed.connect((a) => {
-            adapter_start_discovery_button.sensitive = !a.discovering;
+			update_discovering_spinner(a.discovering);
         });
         adapter.powered_changed.connect((a) => {
             powered_switch.set_active(a.powered);
@@ -206,9 +213,6 @@ public class XfceBluetoothApp : GLib.Object {
         });
         adapter.discoverable_changed.connect((a) => {
             set_visibility_label();
-        });
-        adapter.discoverable_timeout_changed.connect((a) => {
-            discoverable_timeout_spinbutton.adjustment.value = a.discoverable_timeout;
         });
     }
 
@@ -275,12 +279,8 @@ public class XfceBluetoothApp : GLib.Object {
             model.get_value(iter, DevCols.OBJPATH, out objpath);
             selected_device = objpath.get_string();
             stdout.printf("Selected %s\n", selected_device);
-            device_remove_button.sensitive = true;
-            device_connect_button.sensitive = true;
         } else {
             selected_device = null;
-            device_remove_button.sensitive = false;
-            device_connect_button.sensitive = false;
         }
     }
 

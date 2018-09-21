@@ -125,7 +125,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinner" id="spinner">
+                  <object class="GtkSpinner" id="discovering_spinner">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                   </object>
