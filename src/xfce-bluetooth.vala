@@ -166,7 +166,6 @@ public class XfceBluetoothApp : GLib.Object {
 			alias_label = builder.get_object("alias_label") as Gtk.Label;
 			alias_label.set_label(adapter.alias);
 
-			discovering_spinner = builder.get_object("discovering_spinner") as Gtk.Spinner;
             find_devices();
 
             device_treeview = builder.get_object("device_treeview") as TreeView;
@@ -178,6 +177,9 @@ public class XfceBluetoothApp : GLib.Object {
             col.pack_start(iconcell, true);
             col.add_attribute(iconcell, "icon-name", DevCols.ICON);
             col.set_sort_column_id(DevCols.ICON);
+			discovering_spinner = new Gtk.Spinner();
+			discovering_spinner.show();
+            col.set_widget(discovering_spinner);
             device_treeview.append_column(col);
 
             var text = new CellRendererText();
