@@ -130,13 +130,21 @@ public class XfceBluetoothApp : GLib.Object {
             v.insert_column_with_attributes (-1, title, toggle, "active", col);
     }
 
+	private void set_discoverable(bool state) {
+		adapter.discoverable = state;
+	}
+
     private void build_ui() {
         Builder builder = new Builder();
         try {
             builder.add_from_file("bluetooth-devices.ui");
 
             window = builder.get_object("dialog") as Window;
-            window.destroy.connect(Gtk.main_quit);
+            window.destroy.connect(() => {
+				set_discoverable(false);
+				stdout.printf("Exiting\n");
+				Gtk.main_quit();
+			});
 
             powered_switch = builder.get_object("powered_switch") as Gtk.Switch;
             powered_switch.set_active(adapter.powered);
@@ -170,7 +178,7 @@ public class XfceBluetoothApp : GLib.Object {
             treeview_add_toggle_col(device_treeview, "Blocked", DevCols.BLOCKED, true);
 
             device_treeview.get_selection().changed.connect(on_device_selection_changed);
-
+			set_discoverable(true);
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
             return;
@@ -201,7 +209,7 @@ public class XfceBluetoothApp : GLib.Object {
 
     [CCode (instance_pos = -1)]
     public void on_close(Button source) {
-        Gtk.main_quit();
+		window.destroy();
     }
 
     [CCode (instance_pos = -1)]
