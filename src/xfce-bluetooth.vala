@@ -149,7 +149,7 @@ public class XfceBluetoothApp : GLib.Object {
             powered_switch = builder.get_object("powered_switch") as Gtk.Switch;
             powered_switch.set_active(adapter.powered);
 
-			alias_label = builder.get_object("friendly_name") as Gtk.Label;
+			alias_label = builder.get_object("alias_label") as Gtk.Label;
 			alias_label.set_label(adapter.alias);
             find_devices();
 
