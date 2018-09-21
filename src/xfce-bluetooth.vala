@@ -11,6 +11,7 @@ public class XfceBluetoothApp : GLib.Object {
     ToolButton device_connect_button;
     ToolButton adapter_start_discovery_button;
     TreeView device_treeview;
+    Label alias_label;
 
     DBusObjectManager manager;
     BluezAdapterProperties adapter;
@@ -140,6 +141,8 @@ public class XfceBluetoothApp : GLib.Object {
             powered_switch = builder.get_object("powered_switch") as Gtk.Switch;
             powered_switch.set_active(adapter.powered);
 
+			alias_label = builder.get_object("friendly_name") as Gtk.Label;
+			alias_label.set_label(adapter.alias);
             find_devices();
 
             device_treeview = builder.get_object("device_treeview") as TreeView;
@@ -173,6 +176,9 @@ public class XfceBluetoothApp : GLib.Object {
             return;
         }
         builder.connect_signals(this);
+        adapter.alias_changed.connect((a) => {
+			alias_label.set_label(a.alias);
+		});
         adapter.discovering_changed.connect((a) => {
             adapter_start_discovery_button.sensitive = !a.discovering;
         });
