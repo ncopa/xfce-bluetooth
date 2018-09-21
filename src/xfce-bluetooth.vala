@@ -3,7 +3,7 @@ using Gtk;
 public class XfceBluetoothApp : GLib.Object {
     public Window window;
     public CheckButton discoverable_checkbutton;
-    public CheckButton powered_checkbutton;
+    public Switch powered_switch;
     public SpinButton discoverable_timeout_spinbutton;
 
     string? selected_device = null;
@@ -132,29 +132,13 @@ public class XfceBluetoothApp : GLib.Object {
     private void build_ui() {
         Builder builder = new Builder();
         try {
-            builder.add_from_file("bluetooth-preferences.ui");
+            builder.add_from_file("bluetooth-devices.ui");
 
             window = builder.get_object("dialog") as Window;
             window.destroy.connect(Gtk.main_quit);
 
-            powered_checkbutton = builder.get_object("powered_checkbutton") as CheckButton;
-            powered_checkbutton.set_active(adapter.powered);
-
-            discoverable_checkbutton = builder.get_object("discoverable_checkbutton") as CheckButton;
-            discoverable_checkbutton.set_active(adapter.discoverable);
-            discoverable_checkbutton.sensitive = adapter.powered
-                && !adapter.discoverable;
-
-            discoverable_timeout_spinbutton = builder.get_object("discoverable_timeout_spinbutton") as SpinButton;
-            discoverable_timeout_spinbutton.set_value(adapter.discoverable_timeout);
-            discoverable_timeout_spinbutton.adjustment.value_changed.connect((a) => {
-                adapter.discoverable_timeout = (uint32) a.value;
-            });
-
-            adapter_start_discovery_button = builder.get_object("btn_search") as ToolButton;
-            device_remove_button = builder.get_object("btn_remove") as ToolButton;
-            device_connect_button = builder.get_object("btn_connect") as ToolButton;
-            adapter_start_discovery_button = builder.get_object("btn_search") as ToolButton;
+            powered_switch = builder.get_object("powered_switch") as Gtk.Switch;
+            powered_switch.set_active(adapter.powered);
 
             find_devices();
 
@@ -162,10 +146,11 @@ public class XfceBluetoothApp : GLib.Object {
             device_treeview.set_model(device_store);
 
 			var iconcell = new CellRendererPixbuf();
+			iconcell.set_property("stock-size", Gtk.IconSize.DIALOG);
             var col = new TreeViewColumn();
-            //col.set_title("Icon");
             col.pack_start(iconcell, true);
             col.add_attribute(iconcell, "icon-name", DevCols.ICON);
+            col.set_sort_column_id(DevCols.ICON);
             device_treeview.append_column(col);
 
             var text = new CellRendererText();
@@ -173,6 +158,7 @@ public class XfceBluetoothApp : GLib.Object {
             col.set_title("Device");
             col.pack_start(text, true);
             col.add_attribute(text, "text", DevCols.ALIAS);
+            col.set_sort_column_id(DevCols.ALIAS);
             device_treeview.append_column(col);
 
             treeview_add_toggle_col(device_treeview, "Connected", DevCols.CONNECTED, false);
@@ -191,7 +177,7 @@ public class XfceBluetoothApp : GLib.Object {
             adapter_start_discovery_button.sensitive = !a.discovering;
         });
         adapter.powered_changed.connect((a) => {
-            powered_checkbutton.set_active(a.powered);
+            powered_switch.set_active(a.powered);
             set_widgets_sensibility();
         });
         adapter.discoverable_changed.connect((a) => {
@@ -219,7 +205,8 @@ public class XfceBluetoothApp : GLib.Object {
     }
 
     [CCode (instance_pos = -1)]
-    public void on_powered(ToggleButton button) {
+    public void on_powered(Switch button) {
+		stdout.printf("bluetooth state set to %s\n", button.get_active() ? "on":"off");
         adapter.powered = button.get_active();
         set_widgets_sensibility();
     }
