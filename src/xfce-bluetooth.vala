@@ -150,7 +150,16 @@ public class XfceBluetoothApp : GLib.Object {
 	private void set_powered(bool state) {
 		adapter.powered = state;
 		set_discoverable(state);
+		set_scanning(state);
 		set_widgets_sensibility();
+	}
+
+	private void set_scanning(bool state) {
+		if (state) {
+			adapter.start_discovery();
+		} else {
+			adapter.stop_discovery();
+		}
 	}
 
     private void build_ui() {
@@ -206,6 +215,7 @@ public class XfceBluetoothApp : GLib.Object {
 
             device_treeview.get_selection().changed.connect(on_device_selection_changed);
 			set_discoverable(true);
+			set_scanning(true);
 			set_widgets_sensibility();
         } catch (Error e) {
             stderr.printf("%s\n", e.message);
