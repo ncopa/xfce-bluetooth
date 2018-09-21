@@ -2,7 +2,6 @@ using Gtk;
 
 public class XfceBluetoothApp : GLib.Object {
     public Window window;
-    public CheckButton discoverable_checkbutton;
     public Switch powered_switch;
     public SpinButton discoverable_timeout_spinbutton;
 
@@ -12,6 +11,7 @@ public class XfceBluetoothApp : GLib.Object {
     ToolButton adapter_start_discovery_button;
     TreeView device_treeview;
     Label alias_label;
+    Label visible_label;
 
     DBusObjectManager manager;
     BluezAdapterProperties adapter;
@@ -132,6 +132,15 @@ public class XfceBluetoothApp : GLib.Object {
 
 	private void set_discoverable(bool state) {
 		adapter.discoverable = state;
+		set_visibility_label();
+	}
+
+	private bool is_discoverable() {
+		return adapter.discoverable;
+	}
+
+	private void set_visibility_label() {
+		visible_label.set_label(is_discoverable() ? "Visible as" : "Not visible");
 	}
 
     private void build_ui() {
@@ -149,6 +158,7 @@ public class XfceBluetoothApp : GLib.Object {
             powered_switch = builder.get_object("powered_switch") as Gtk.Switch;
             powered_switch.set_active(adapter.powered);
 
+			visible_label = builder.get_object("visible_label") as Gtk.Label;
 			alias_label = builder.get_object("alias_label") as Gtk.Label;
 			alias_label.set_label(adapter.alias);
             find_devices();
@@ -195,8 +205,7 @@ public class XfceBluetoothApp : GLib.Object {
             set_widgets_sensibility();
         });
         adapter.discoverable_changed.connect((a) => {
-            discoverable_checkbutton.set_active(a.discoverable);
-            set_widgets_sensibility();
+            set_visibility_label();
         });
         adapter.discoverable_timeout_changed.connect((a) => {
             discoverable_timeout_spinbutton.adjustment.value = a.discoverable_timeout;
@@ -204,7 +213,8 @@ public class XfceBluetoothApp : GLib.Object {
     }
 
     void set_widgets_sensibility() {
-        discoverable_checkbutton.sensitive = adapter.powered && !adapter.discoverable;
+		set_visibility_label();
+		device_treeview.sensitive = adapter.powered;
     }
 
     [CCode (instance_pos = -1)]
